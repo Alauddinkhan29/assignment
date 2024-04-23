@@ -68,5 +68,6 @@ const styles = StyleSheet.create({
     },
     backTxt: {
         fontSize: horizontalScale(13),
+        color: "black"
     }
 })
