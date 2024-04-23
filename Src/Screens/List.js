@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Alert, FlatList, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
 import { GetPostsDataUrl } from '../Api/ApiConfig'
@@ -11,15 +11,32 @@ const List = (props) => {
     const [postsLoading, setPostsLoading] = useState(true)
 
     useEffect(() => {
-        axios(GetPostsDataUrl)
-            .then((res) => {
-                setData(res?.data)
-                setPostsLoading(false)
-            })
-            .catch((error) => {
-                setPostsLoading(false)
-            })
+        fetchData()
     }, [])
+
+    const fetchData = async () => {
+        try {
+            const response = await axios.get(GetPostsDataUrl);
+            setData(response.data);
+        } catch (error) {
+            Alert.alert("Something went wrong!!")
+        } finally {
+            setPostsLoading(false);
+        }
+    };
+
+    const renderItem = useCallback(
+        ({ item }) => (
+            <TouchableOpacity onPress={() => props.navigation.navigate('listDetail', { itemDetail: item?.id })} style={styles.listParentView}>
+                <Card
+                    id={item?.id}
+                    title={item?.title}
+                    detail={item?.body}
+                />
+            </TouchableOpacity>
+        ),
+        []
+    );
 
     const renderPostsList = useCallback(() => {
         return (
@@ -27,17 +44,7 @@ const List = (props) => {
                 <FlatList
                     data={data}
                     showsVerticalScrollIndicator={false}
-                    renderItem={({ item }) => {
-                        return (
-                            <TouchableOpacity onPress={() => { props.navigation.navigate('listDetail', { itemDetail: item?.id }) }} style={styles.listParentView}>
-                                <Card
-                                    id={item?.id}
-                                    title={item?.title}
-                                    detail={item?.body}
-                                />
-                            </TouchableOpacity>
-                        )
-                    }}
+                    renderItem={renderItem}
                 />
             </View>
         )
@@ -84,7 +91,8 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     listView: {
-        height: "90%",
+        height: "93%",
+        // backgroundColor: "red",
         width: horizontalScale(350),
         alignSelf: "center",
     }

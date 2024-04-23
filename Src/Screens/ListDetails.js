@@ -1,5 +1,5 @@
-import { ActivityIndicator, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, Alert, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native'
+import React, { useCallback, useEffect, useState } from 'react'
 import Header from '../Component/Header'
 import axios from 'axios'
 import { GetPostDetailUrl } from '../Api/ApiConfig'
@@ -10,16 +10,32 @@ const ListDetails = (props) => {
     const [itemLoading, setItemLoading] = useState(true)
 
     useEffect(() => {
-        const { itemDetail } = props.route.params;
-        axios(GetPostDetailUrl + itemDetail)
-            .then((res) => {
-                setItemData(res?.data)
-                setItemLoading(false)
-            })
-            .catch((err) => {
-                setItemLoading(false)
-            })
+
+        fetchData()
     }, [])
+
+    const fetchData = async () => {
+        const { itemDetail } = props.route.params;
+        try {
+            const response = await axios.get(GetPostDetailUrl + itemDetail);
+            setItemData(response.data);
+        } catch (error) {
+            Alert.alert("Something went wrong!!")
+        } finally {
+            setItemLoading(false);
+        }
+    };
+
+
+    const renderCardDetails = useCallback(() => (
+        <View style={styles.carView}>
+            <CardDetails
+                id={itemData.id}
+                title={itemData.title}
+                detail={itemData.body}
+            />
+        </View>
+    ), [itemData]);
 
     return (
         <SafeAreaView style={styles.mainContainer}>
@@ -39,13 +55,7 @@ const ListDetails = (props) => {
                         <ActivityIndicator size={"large"} color={"black"} />
                     </View>
                     :
-                    <View style={styles.carView}>
-                        <CardDetails
-                            id={itemData.id}
-                            title={itemData.title}
-                            detail={itemData.body}
-                        />
-                    </View>
+                    renderCardDetails()
             }
 
         </SafeAreaView>
